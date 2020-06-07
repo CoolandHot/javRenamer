@@ -14,7 +14,7 @@ Delete it if you don't need one.
 
 ## rename rules
 **default rule**:
-actress-[javCode]-[title]-[publishDate].suffix
+actress-[avid]-[title]-[publishDate].suffix
 
 Change order on line 10.
 
