@@ -8,6 +8,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SEARCHURL = 'https://avmoo.host/cn/search/'
 reNameOrder = ['actress', 'javCode', 'title', 'publishDate']
+downimg = True
+
 
 PROXY = {"http": "socks5://127.0.0.1:1099", "https": "socks5://127.0.0.1:1099"}
 HEADER = {
@@ -25,6 +27,7 @@ HEADER = {
     'sec-fetch-mode': 'cors'
 }
 
+
 def findActress(soup):
     avatars = soup.select('.avatar-box')
     actresses = [avatar.select_one('span').text for avatar in avatars]
@@ -36,6 +39,7 @@ def findActress(soup):
     
 def searchTitle(link):
     finalstr = None
+    imgurl = ''
     try:
         PROXY
     except NameError:
@@ -48,12 +52,13 @@ def searchTitle(link):
             title = soup.select_one('h3').text.split(javCode+' ')[1]
             publishDate = re.search(r'\d{4}-\d{2}-\d{2}', soup.select('span.header')[1].parent.text).group(0)
             actress = findActress(soup)
+            imgurl = soup.select_one('.bigImage')['href']
             renameStr = {'actress': actress, 'javCode': javCode, 'title': title, 'publishDate': publishDate}
             neededOrder = [renameStr[i] for i in reNameOrder]
             finalstr = neededOrder[0]+'-['+']-['.join(neededOrder[1:4])+']'
     except Exception as e:
         print(e)
-    return finalstr
+    return finalstr, imgurl
 
 def searchID(javCode):
     request_url = SEARCHURL+javCode
@@ -85,10 +90,13 @@ def javRe(fullpath):
     suffix = matchObj.group(0)
     filename = filename0[0:matchObj.span()[0]]
     javCode = re.search(r'(?=\W?)\w{3,5}-?\d{3,5}(?=\D?)', filename).group(0)
-    newName = searchID(javCode)
+    newName, imgurl = searchID(javCode)
     if newName is not None:
         try:
             os.rename(fullpath, os.path.join(basepath, newName+suffix))
+            if downimg:
+                r = requests.get(imgurl, headers=HEADER, allow_redirects=True, proxies=PROXY)
+                open(os.path.join(basepath, newName+'.jpg'), 'wb').write(r.content)
         except Exception as e:
             print(e)
             print('fail on', filename)
