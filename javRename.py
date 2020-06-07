@@ -37,6 +37,10 @@ def findActress(soup):
 def searchTitle(link):
     finalstr = None
     try:
+        PROXY
+    except NameError:
+        PROXY = None
+    try:
         response = requests.get(link, headers=HEADER, allow_redirects=True, proxies=PROXY, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')            
@@ -53,6 +57,10 @@ def searchTitle(link):
 
 def searchID(javCode):
     request_url = SEARCHURL+javCode
+    try:
+        PROXY
+    except NameError:
+        PROXY = None
     try:
         response = requests.get(request_url, headers=HEADER, allow_redirects=True, proxies=PROXY, verify=False)
         if response.status_code == 200:
@@ -73,7 +81,7 @@ def searchID(javCode):
 def javRe(fullpath):
     splitstr = os.path.split(fullpath.rstrip(os.path.sep))
     basepath, filename0 = splitstr[0], splitstr[1]
-    matchObj = re.search(r"\.[A-Za-z0-9]{3}$", filename0)
+    matchObj = re.search(r"\.[A-Za-z0-9]{3,10}$", filename0)
     suffix = matchObj.group(0)
     filename = filename0[0:matchObj.span()[0]]
     javCode = re.search(r'(?=\W?)\w{3,5}-?\d{3,5}(?=\D?)', filename).group(0)
