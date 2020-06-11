@@ -8,7 +8,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SEARCHURL = 'https://avmoo.host/cn/search/'
 reNameOrder = ['actress', 'javCode', 'title', 'publishDate']
-downimg = True
+downimg = False
 
 
 PROXY = {"http": "socks5://127.0.0.1:1099", "https": "socks5://127.0.0.1:1099"}
@@ -39,7 +39,7 @@ def findActress(soup):
     
 def searchTitle(link):
     finalstr = None
-    imgurl = ''
+    imgResponse = None
     try:
         PROXY
     except NameError:
@@ -53,12 +53,13 @@ def searchTitle(link):
             publishDate = re.search(r'\d{4}-\d{2}-\d{2}', soup.select('span.header')[1].parent.text).group(0)
             actress = findActress(soup)
             imgurl = soup.select_one('.bigImage')['href']
+            imgResponse = requests.get(imgurl, headers=HEADER, allow_redirects=True, proxies=PROXY)
             renameStr = {'actress': actress, 'javCode': javCode, 'title': title, 'publishDate': publishDate}
             neededOrder = [renameStr[i] for i in reNameOrder]
             finalstr = neededOrder[0]+'-['+']-['.join(neededOrder[1:4])+']'
     except Exception as e:
         print(e)
-    return finalstr, imgurl
+    return finalstr, imgResponse
 
 def searchID(javCode):
     request_url = SEARCHURL+javCode
@@ -79,7 +80,7 @@ def searchID(javCode):
                     javID = link.select_one('date').text.replace('-', '')
                     if javCode==javID:
                         return searchTitle(link['href'])
-                return None
+                return None, None
     except Exception as e:
         print(e)
 
@@ -89,14 +90,13 @@ def javRe(fullpath):
     matchObj = re.search(r"\.[A-Za-z0-9]{3,10}$", filename0)
     suffix = matchObj.group(0)
     filename = filename0[0:matchObj.span()[0]]
-    javCode = re.search(r'(?=\W?)\w{3,5}-?\d{3,5}(?=\D?)', filename).group(0)
-    newName, imgurl = searchID(javCode)
+    javCode = re.search(r'(?![^A-Za-z])?[A-Za-z]{3,5}-\d{3,5}(?=\D)?', filename).group(0)
+    newName, imgResponse = searchID(javCode) 
     if newName is not None:
         try:
             os.rename(fullpath, os.path.join(basepath, newName+suffix))
-            if downimg:
-                r = requests.get(imgurl, headers=HEADER, allow_redirects=True, proxies=PROXY)
-                open(os.path.join(basepath, newName+'.jpg'), 'wb').write(r.content)
+            if downimg:                
+                open(os.path.join(basepath, newName+'.jpg'), 'wb').write(imgResponse.content)
         except Exception as e:
             print(e)
             print('fail on', filename)

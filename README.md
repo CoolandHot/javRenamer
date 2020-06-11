@@ -14,7 +14,7 @@ Delete it if you don't need one.
 **line 10 default rule**:
 actress-[avid]-[title]-[publishDate].suffix
 
-**line 58**: The first part is not covered by [ ] by default, change it yourself.
+**line 59**: The first part is not covered by [ ] by default, change it yourself.
 
 ## download cover
 **line 11**: downimg = True or False
