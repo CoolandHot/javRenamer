@@ -90,8 +90,11 @@ def javRe(fullpath):
     matchObj = re.search(r"\.[A-Za-z0-9]{3,10}$", filename0)
     suffix = matchObj.group(0)
     filename = filename0[0:matchObj.span()[0]]
-    javCode = re.search(r'(?![^A-Za-z])?[A-Za-z]{3,5}-?\d{3,5}(?=\D)?', filename).group(0)
-    newName, imgResponse = searchID(javCode) 
+    javCode = re.search(r'(?![^A-Za-z])?[A-Za-z]{3,5}-?\d{3,5}(?=\D)?', filename)
+    if javCode is not None:
+        newName, imgResponse = searchID(javCode.group(0))
+    else:
+        newName = None
     if newName is not None:
         try:
             os.rename(fullpath, os.path.join(basepath, newName+suffix))
