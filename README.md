@@ -8,7 +8,7 @@ drap and drop files into `javRename拖放文件.bat`
 ## proxy
 **line 14**: PROXY = {"http": "socks5://127.0.0.1:1099", "https": "socks5://127.0.0.1:1099"}
 
-Delete it if you don't need one.
+If you don't need one, set it to None: PROXY = None
 
 ## rename rules
 **line 10 default rule**:

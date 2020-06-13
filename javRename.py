@@ -41,10 +41,6 @@ def searchTitle(link):
     finalstr = None
     imgResponse = None
     try:
-        PROXY
-    except NameError:
-        PROXY = None
-    try:
         response = requests.get(link, headers=HEADER, allow_redirects=True, proxies=PROXY, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')            
@@ -63,10 +59,6 @@ def searchTitle(link):
 
 def searchID(javCode):
     request_url = SEARCHURL+javCode
-    try:
-        PROXY
-    except NameError:
-        PROXY = None
     try:
         response = requests.get(request_url, headers=HEADER, allow_redirects=True, proxies=PROXY, verify=False)
         if response.status_code == 200:
@@ -112,5 +104,6 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv)==1:
         print("use command: python javRename.py inputFile.mp4")
+        input()
     else:
         javRe(sys.argv[1])
