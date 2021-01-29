@@ -42,7 +42,7 @@ class basic_class: # this class applies to both javBus and avmoo
                             'title': self.title,
                             'publishDate': self.publishDate}
                 neededOrder = [renameStr[i] for i in reNameOrder] # rename by the set order
-                self.finalstr = neededOrder[0]+'-['+']-['.join(neededOrder[1:4])+']'
+                self.finalstr = neededOrder[0]+'-['+']-['.join(neededOrder[1:4])+']' # heroine's name is not covered by [ ]
         except Exception as e:
             print(e)
     def searchID(self):

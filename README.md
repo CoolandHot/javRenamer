@@ -11,10 +11,10 @@ drap and drop files into `javRename拖放文件.bat`
 If you don't need one, set it to None: PROXY = None
 
 ## rename rules
-**line 10 default rule**:
+**line 9 default rule**:
 actress-[avid]-[title]-[publishDate].suffix
 
-**line 59**: The first part is not covered by [ ] by default, change it yourself.
+**line 45**: The first part is not covered by [ ] by default, change it yourself.
 
 ## download cover
-**line 11**: downimg = True or False
+**line 10**: downimg = True or False
