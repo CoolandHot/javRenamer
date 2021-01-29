@@ -22,7 +22,7 @@ class basic_class: # this class applies to both javBus and avmoo
     def __init__(self, javCode):
         self.javID = javCode
         self.title, self.publishDate, self.heroine = None, None, None
-        self.img, self.request_url= None, None
+        self.img = None
         self.finalstr = None # store the new name
     def searchTitle(self, link):
         try:
@@ -30,7 +30,7 @@ class basic_class: # this class applies to both javBus and avmoo
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')            
                 self.javID = soup.select_one('span.header').findNext('span').text
-                self.title = soup.select_one('h3').text.split(self.javID+' ')[1]
+                self.title = soup.select_one('h3').text.split(self.javID+' ')[1].replace("/", " ").replace("\\", " ") # delete illegal strings
                 self.publishDate = re.search(r'\d{4}-\d{2}-\d{2}', soup.select('span.header')[1].parent.text).group(0)
                 self.findActress(soup) # find heroines
                 if downimg:
@@ -54,9 +54,9 @@ class basic_class: # this class applies to both javBus and avmoo
                 if len(links)==1: # request returns only one result
                     self.searchTitle(links[0]['href'])
                 else:
-                    javCode = self.javID.replace('-', '') # replace any '-' for later comparison
+                    javCode = self.javID.replace('-', '').upper() # replace any '-' for later comparison
                     for link in links:
-                        javID = link.select_one('date').text.replace('-', '') # acquire each result's javID
+                        javID = link.select_one('date').text.replace('-', '').upper() # acquire each result's javID
                         if javCode==javID: # find the one with exact match
                             self.searchTitle(link['href'])
         except Exception as e:
@@ -96,9 +96,7 @@ def javRe(fullpath):
     matchObj = re.search(r"\.[A-Za-z0-9]{3,10}$", filename0)
     suffix = matchObj.group(0)
     filename = filename0[0:matchObj.span()[0]]
-    javCode = re.search(r'(?![^A-Za-z])?[A-Za-z]{2,5}-\d{3,5}(?=\D)?', filename)
-    if javCode is None:
-        javCode = re.search(r'(?![^A-Za-z])?[A-Za-z]{2,5}-?\d{3,5}(?=\D)?', filename)
+    javCode = re.search(r'(?<![^A-Za-z])?[A-Za-z]{2,5}-?\d{3,5}(?=\D)?', filename)
 
     if useJavBus:
         searchResult = javBus(javCode.group(0)) # use javBus website

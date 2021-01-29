@@ -9,7 +9,8 @@ REM echo 文件名+扩展: %~nx1
 REM echo 文件名： %~n1
 REM echo 扩展名： %~x1
 echo -----------------------------
-python javRename.py "%~1"
+REM python javRename.py "%~1"
+go run javRename.go -- "%~1"
 shift
 set /a count+=1
 if not [%1]==[] goto loop
