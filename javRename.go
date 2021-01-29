@@ -21,6 +21,9 @@ const (
 	JavBus     = true
 )
 
+// set order
+var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
+
 func clientScrape(link string) *goquery.Document {
 	// Create a socks5 dialer
 	dialer, err := proxy.SOCKS5("tcp", SOCKsProxy, nil, proxy.Direct)
@@ -110,6 +113,7 @@ func main() {
 	suffixMatch, _ := regexp.Compile(`\.[A-Za-z0-9]{3,10}$`)
 	suffix := suffixMatch.FindString(fileFullname)
 	filename := strings.Replace(fileFullname, suffix, "", 1)
+
 	// look for jav-id
 	javMatch, _ := regexp.Compile(`(:[^A-Za-z])?[A-Za-z]{2,5}-?\d{3,5}(:\D)?`)
 	javIDs := javMatch.FindAllString(filename, -1)
@@ -120,7 +124,18 @@ func main() {
 		fmt.Println(`fail on`, fileFullname)
 		return
 	}
-	newFilename := heroine + "-[" + javID + "]-[" + title + "]-[" + publishDate + "]" + suffix
+
+	// new name according to the order
+	nameOrders := map[string]string{
+		"actress":     heroine,
+		"javID":       javID,
+		"title":       title,
+		"publishDate": publishDate}
+	newFilename := nameOrders[reNameOrder[0]] + "-["
+	for i := 1; i < 3; i++ {
+		newFilename += nameOrders[reNameOrder[i]] + "]-["
+	}
+	newFilename += nameOrders[reNameOrder[3]] + "]" + suffix
 	// rename file
 	err := os.Rename(FullPath, basePath+newFilename)
 	if err != nil {
