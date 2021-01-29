@@ -71,7 +71,11 @@ func getDetail(detailLink string) (string, string, string, string) { // go into 
 			actresses = append(actresses, actress)
 		})
 	}
-	heroine = strings.Join(actresses, " ")
+	if len(actresses) == 0 {
+		heroine = "unknown"
+	} else {
+		heroine = strings.Join(actresses, " ")
+	}
 	return javID, title, publishDate, heroine
 }
 
@@ -112,11 +116,15 @@ func main() {
 	if len(javIDs) == 1 {
 		javID, title, publishDate, heroine = getWebs(avmoo, javIDs[0])
 	}
+	if title == "" {
+		fmt.Println(`fail on`, fileFullname)
+		return
+	}
 	newFilename := heroine + "-[" + javID + "]-[" + title + "]-[" + publishDate + "]" + suffix
 	// rename file
 	err := os.Rename(FullPath, basePath+newFilename)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(`fail on`, fileFullname)
 	} else {
 		fmt.Println(`successfully rename`, fileFullname)
 	}

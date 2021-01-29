@@ -87,8 +87,7 @@ class avmoo(basic_class):
             self.heroine = ' '.join(actresses)
         else:
             self.heroine = 'unknown'
-
-
+            
 
 def javRe(fullpath):
     splitstr = os.path.split(fullpath.rstrip(os.path.sep))
