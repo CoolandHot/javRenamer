@@ -17,7 +17,7 @@ import (
 
 // set proxy and choose javbus or avmoo
 const (
-	SOCKsProxy = "127.0.0.1:1099"
+	SOCKsProxy = "127.0.0.1:1080"
 	JavBus     = true
 )
 
@@ -115,13 +115,23 @@ func main() {
 	filename := strings.Replace(fileFullname, suffix, "", 1)
 
 	// look for jav-id
-	javMatch, _ := regexp.Compile(`(:[^A-Za-z])?[A-Za-z]{2,5}-?\d{3,5}(:\D)?`)
-	javIDs := javMatch.FindAllString(filename, -1)
-	if len(javIDs) == 1 {
-		javID, title, publishDate, heroine = getWebs(avmoo, javIDs[0])
+	matchRules := []string{
+		`(:[^A-Za-z])?[A-Za-z]{2,5}-\d{3,5}(:\D)?`, // MIDE-939
+		`(:[^A-Za-z])?[A-Za-z]{2,5}\d{3,5}(:\D)?`,  // MIDE939
+		`(:[^A-Za-z])?[A-Za-z]\d{2}-\d{3,5}(:\D)?`, // T28-556
+	}
+	for _, matchRule := range matchRules {
+		javMatch, _ := regexp.Compile(matchRule)
+		javIDs := javMatch.FindAllString(filename, -1)
+		if len(javIDs) == 1 {
+			javID, title, publishDate, heroine = getWebs(avmoo, javIDs[0])
+		}
+		if title != "" {
+			break
+		}
 	}
 	if title == "" {
-		fmt.Println(`fail on`, fileFullname)
+		fmt.Println(`fail on searching the javID`, fileFullname)
 		return
 	}
 
@@ -139,7 +149,7 @@ func main() {
 	// rename file
 	err := os.Rename(FullPath, basePath+newFilename)
 	if err != nil {
-		fmt.Println(`fail on`, fileFullname)
+		fmt.Println(`fail on renaming file`, fileFullname, `to`, newFilename)
 	} else {
 		fmt.Println(`successfully rename`, fileFullname)
 	}
