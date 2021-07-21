@@ -98,7 +98,7 @@ func getWebs(javBus string, javID string) (string, string, string, string) { //g
 	return javID, title, publishDate, heroine
 }
 
-func main() {
+func startRename(FullPath string, ch chan string) {
 	var title, publishDate, heroine, avmoo, javID string
 	if JavBus {
 		avmoo = "https://www.javbus.com/search/"
@@ -106,7 +106,6 @@ func main() {
 		avmoo = "https://avmoo.cyou/cn/search/"
 	}
 	// split filename and suffix
-	FullPath := os.Args[2]
 	fileFullnameMatch, _ := regexp.Compile(`[^\\]+\.[A-Za-z0-9]{3,10}$`)
 	fileFullname := fileFullnameMatch.FindString(FullPath)
 	basePath := strings.Replace(FullPath, fileFullname, "", 1)
@@ -149,8 +148,16 @@ func main() {
 	// rename file
 	err := os.Rename(FullPath, basePath+newFilename)
 	if err != nil {
-		fmt.Println(`fail on renaming file`, fileFullname, `to`, newFilename)
+		ch <- `fail on renaming file ` + fileFullname + ` to ` + newFilename
 	} else {
-		fmt.Println(`successfully rename`, fileFullname)
+		ch <- `successfully rename ` + fileFullname
+	}
+}
+
+func main() {
+	ch := make(chan string, 100)
+	for _, arg := range strings.Split(os.Args[1], " ") {
+		go startRename(arg, ch)
+		fmt.Println(<-ch)
 	}
 }
