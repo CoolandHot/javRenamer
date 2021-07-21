@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 
+	"sync"
+
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/proxy"
 )
@@ -98,7 +100,7 @@ func getWebs(javBus string, javID string) (string, string, string, string) { //g
 	return javID, title, publishDate, heroine
 }
 
-func startRename(FullPath string, ch chan string) {
+func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 	var title, publishDate, heroine, avmoo, javID string
 	if JavBus {
 		avmoo = "https://www.javbus.com/search/"
@@ -152,12 +154,25 @@ func startRename(FullPath string, ch chan string) {
 	} else {
 		ch <- `successfully rename ` + fileFullname
 	}
+	wg.Done()
 }
 
 func main() {
+	var wg sync.WaitGroup
 	ch := make(chan string, 100)
-	for _, arg := range strings.Split(os.Args[1], " ") {
-		go startRename(arg, ch)
-		fmt.Println(<-ch)
+	for _, arg := range strings.Split(os.Args[1], "***") {
+		if arg != "" {
+			// check if file exists
+			if _, err := os.Stat(arg); err == nil {
+				wg.Add(1) //increment the WaitGroup counter for each
+				go startRename(arg, ch, &wg)
+			}
+		}
 	}
+	wg.Wait() //Block until the WaitGroup counter goes back to 0
+	close(ch) //close the channel so that range iterator can operate on it
+	for i := range ch {
+		fmt.Println(i)
+	}
+
 }
