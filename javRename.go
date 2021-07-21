@@ -58,8 +58,8 @@ func getDetail(detailLink string) (string, string, string, string) { // go into 
 	javID = doc.Find("span.header").Eq(0).Next().Text()
 	title = strings.ReplaceAll(doc.Find("h3").Eq(0).Text(), javID+" ", "") // delete id inside
 	title = strings.ReplaceAll(title, "/", " ")                            // delete illegal strings
-	title = strings.ReplaceAll(title, "\\", " ")                           // delete illegal strings
-	regexpMatch, _ := regexp.Compile("\\d{4}-\\d{2}-\\d{2}")
+	title = strings.ReplaceAll(title, `\`, " ")                            // delete illegal strings
+	regexpMatch, _ := regexp.Compile(`\d{4}-\d{2}-\d{2}`)
 	publishDate = doc.Find("span.header").Eq(1).Parent().Text()
 	publishDate = regexpMatch.FindString(publishDate)
 	var actresses []string
