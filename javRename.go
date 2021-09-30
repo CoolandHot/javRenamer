@@ -1,5 +1,8 @@
-// go get github.com/PuerkitoBio/goquery
-// go get -u golang.org/x/net
+// to initialize the go module, run the following commands:
+// ##########################
+// go mod init CoolandHot/javRenamer
+// go mod tidy
+// ##########################
 
 package main
 
@@ -47,11 +50,13 @@ func clientScrape(link string) *goquery.Document {
 	}
 	defer resp.Body.Close()
 
-	var doc *goquery.Document
 	if resp.StatusCode == 200 {
+		var doc *goquery.Document
 		doc, _ = goquery.NewDocumentFromReader(resp.Body)
+		return doc
+	} else {
+		return nil
 	}
-	return doc
 }
 
 func getDetail(detailLink string) (string, string, string, string) { // go into the detail pages
@@ -87,16 +92,18 @@ func getDetail(detailLink string) (string, string, string, string) { // go into 
 func getWebs(javBus string, javID string) (string, string, string, string) { //get the search result
 	var title, publishDate, heroine string
 	doc := clientScrape(javBus + javID)
-	doc.Find(".movie-box").Each(func(i int, content *goquery.Selection) {
-		res1 := strings.ReplaceAll(content.Find("date").Eq(0).Text(), "-", "")
-		res2 := strings.ReplaceAll(javID, "-", "") // in case any - remain
-		res1, res2 = strings.ToUpper(res1), strings.ToUpper(res2)
-		if res1 == res2 {
-			link, _ := content.Attr("href")
-			javID, title, publishDate, heroine = getDetail(link)
-			return
-		}
-	})
+	if doc != nil {
+		doc.Find(".movie-box").Each(func(i int, content *goquery.Selection) {
+			res1 := strings.ReplaceAll(content.Find("date").Eq(0).Text(), "-", "")
+			res2 := strings.ReplaceAll(javID, "-", "") // in case any - remain
+			res1, res2 = strings.ToUpper(res1), strings.ToUpper(res2)
+			if res1 == res2 {
+				link, _ := content.Attr("href")
+				javID, title, publishDate, heroine = getDetail(link)
+				return
+			}
+		})
+	}
 	return javID, title, publishDate, heroine
 }
 
@@ -105,7 +112,7 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 	if JavBus {
 		avmoo = "https://www.javbus.com/search/"
 	} else {
-		avmoo = "https://avmoo.cyou/cn/search/"
+		avmoo = "https://avmoo.casa/cn/search/"
 	}
 	// split filename and suffix
 	fileFullnameMatch, _ := regexp.Compile(`[^\\]+\.[A-Za-z0-9]{3,10}$`)
