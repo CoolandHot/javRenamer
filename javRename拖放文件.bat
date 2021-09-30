@@ -17,5 +17,6 @@ set AllinOne=%AllinOne%***%~1
 shift
 set /a count+=1
 if not [%1]==[] goto loop
-go run javRename.go "%AllinOne%"
+@REM site_num parameter means: 0:javBus; 1:avmoo; 2:javLibrary
+go run javRename.go -site_num 2 "%AllinOne%"
 pause

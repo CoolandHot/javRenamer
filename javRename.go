@@ -16,6 +16,10 @@ import (
 
 	"sync"
 
+	"net/url"
+
+	"strconv"
+
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/proxy"
 )
@@ -23,11 +27,43 @@ import (
 // set proxy and choose javbus or avmoo
 const (
 	SOCKsProxy = "127.0.0.1:1080"
-	JavBus     = true
 )
 
 // set order
 var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
+var JavSites = [...]string{
+	"https://www.javbus.com/search/",
+	"https://avmoo.casa/cn/search/",
+	"http://www.javlibrary.com/cn/vl_searchbyid.php?keyword=",
+}
+var JavMatchRules = map[string][]string{
+	"actress": {
+		".star-name",
+		"#avatar-waterfall .avatar-box span",
+		"#video_cast span.star",
+	},
+	"title": {
+		"div.container > h3",
+		"div.container > h3",
+		"#video_title > h3 > a",
+	},
+	"javID": {
+		"div.row.movie > div.col-md-3.info > p:nth-child(1) > span:nth-child(2)",
+		"div.row.movie > div.col-md-3.info > p:nth-child(1) > span:nth-child(2)",
+		"#video_id > table > tbody > tr > td.text",
+	},
+	"publishDate": {
+		"div.row.movie > div.col-md-3.info > p:nth-child(2)",
+		"div.row.movie > div.col-md-3.info > p:nth-child(2)",
+		"#video_date > table > tbody > tr > td.text",
+	},
+	"searchResults": {
+		".movie-box",
+		".movie-box",
+		".video > a",
+	},
+}
+var siteX int = 0
 
 func clientScrape(link string) *goquery.Document {
 	// Create a socks5 dialer
@@ -59,28 +95,21 @@ func clientScrape(link string) *goquery.Document {
 	}
 }
 
-func getDetail(detailLink string) (string, string, string, string) { // go into the detail pages
+func getDetail(doc *goquery.Document) (string, string, string, string) { // go into the detail pages
 	var title, publishDate, heroine, javID string
-	doc := clientScrape(detailLink)
-	javID = doc.Find("span.header").Eq(0).Next().Text()
-	title = strings.ReplaceAll(doc.Find("h3").Eq(0).Text(), javID+" ", "") // delete id inside
-	title = strings.ReplaceAll(title, "/", " ")                            // delete illegal strings
-	title = strings.ReplaceAll(title, `\`, " ")                            // delete illegal strings
+	javID = doc.Find(JavMatchRules["javID"][siteX]).Text()
+	// javID = strings.TrimSpace(javID)
+	title = strings.ReplaceAll(doc.Find(JavMatchRules["title"][siteX]).Text(), javID+" ", "") // delete id inside
+	title = strings.ReplaceAll(title, "/", " ")                                               // delete illegal strings
+	title = strings.ReplaceAll(title, `\`, " ")                                               // delete illegal strings
 	regexpMatch, _ := regexp.Compile(`\d{4}-\d{2}-\d{2}`)
-	publishDate = doc.Find("span.header").Eq(1).Parent().Text()
+	publishDate = doc.Find(JavMatchRules["publishDate"][siteX]).Text()
 	publishDate = regexpMatch.FindString(publishDate)
 	var actresses []string
-	if JavBus {
-		doc.Find(".star-name").Each(func(i int, s *goquery.Selection) {
-			actress := s.Text()
-			actresses = append(actresses, actress)
-		})
-	} else {
-		doc.Find(".avatar-box span").Each(func(i int, s *goquery.Selection) {
-			actress := s.Text()
-			actresses = append(actresses, actress)
-		})
-	}
+	doc.Find(JavMatchRules["actress"][siteX]).Each(func(i int, s *goquery.Selection) {
+		actress := s.Text()
+		actresses = append(actresses, actress)
+	})
 	if len(actresses) == 0 {
 		heroine = "unknown"
 	} else {
@@ -89,31 +118,30 @@ func getDetail(detailLink string) (string, string, string, string) { // go into 
 	return javID, title, publishDate, heroine
 }
 
-func getWebs(javBus string, javID string) (string, string, string, string) { //get the search result
+func getWebs(javID string) (string, string, string, string) { //get the search result
 	var title, publishDate, heroine string
-	doc := clientScrape(javBus + javID)
+	doc := clientScrape(JavSites[siteX] + javID)
 	if doc != nil {
-		doc.Find(".movie-box").Each(func(i int, content *goquery.Selection) {
-			res1 := strings.ReplaceAll(content.Find("date").Eq(0).Text(), "-", "")
-			res2 := strings.ReplaceAll(javID, "-", "") // in case any - remain
-			res1, res2 = strings.ToUpper(res1), strings.ToUpper(res2)
-			if res1 == res2 {
-				link, _ := content.Attr("href")
-				javID, title, publishDate, heroine = getDetail(link)
-				return
+		if doc.Find(JavMatchRules["searchResults"][siteX]).Length() != 0 {
+			link, _ := doc.Find(JavMatchRules["searchResults"][siteX]).Eq(0).Attr("href")
+			// in case the href is a relative link, convert it to absolute link
+			baseUrl, err := url.Parse(JavSites[siteX]) // parse only base url
+			if err != nil {
+				log.Fatal(err)
 			}
-		})
+			fullUrl, err := baseUrl.Parse(link) // then use it to parse relative URLs
+			if err != nil {
+				log.Fatal(err)
+			}
+			doc = clientScrape(fullUrl.String())
+		}
+		javID, title, publishDate, heroine = getDetail(doc)
 	}
 	return javID, title, publishDate, heroine
 }
 
 func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
-	var title, publishDate, heroine, avmoo, javID string
-	if JavBus {
-		avmoo = "https://www.javbus.com/search/"
-	} else {
-		avmoo = "https://avmoo.casa/cn/search/"
-	}
+	var title, publishDate, heroine, javID string
 	// split filename and suffix
 	fileFullnameMatch, _ := regexp.Compile(`[^\\]+\.[A-Za-z0-9]{3,10}$`)
 	fileFullname := fileFullnameMatch.FindString(FullPath)
@@ -132,7 +160,7 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 		javMatch, _ := regexp.Compile(matchRule)
 		javIDs := javMatch.FindAllString(filename, -1)
 		if len(javIDs) == 1 {
-			javID, title, publishDate, heroine = getWebs(avmoo, javIDs[0])
+			javID, title, publishDate, heroine = getWebs(javIDs[0])
 		}
 		if title != "" {
 			break
@@ -167,7 +195,13 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 func main() {
 	var wg sync.WaitGroup
 	ch := make(chan string, 100)
-	for _, arg := range strings.Split(os.Args[1], "***") {
+	site_num, err := strconv.ParseInt(os.Args[2], 10, 0)
+	if err != nil {
+		fmt.Println("site_num parameter must be integer")
+		os.Exit(1)
+	}
+	siteX = int(site_num)
+	for _, arg := range strings.Split(os.Args[3], "***") {
 		if arg != "" {
 			// check if file exists
 			if _, err := os.Stat(arg); err == nil {
@@ -181,5 +215,4 @@ func main() {
 	for i := range ch {
 		fmt.Println(i)
 	}
-
 }
