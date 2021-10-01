@@ -31,6 +31,8 @@ const (
 
 // set order
 var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
+
+// an array with [...] system determine length, not slice, therefore can't append()
 var JavSites = [...]string{
 	"https://www.javbus.com/search/",
 	"https://avmoo.casa/cn/search/",
@@ -195,12 +197,13 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 func main() {
 	var wg sync.WaitGroup
 	ch := make(chan string, 100)
+	// cmd line arguments are strings, can't convert to int with int(), use strconv.ParseInt()
 	site_num, err := strconv.ParseInt(os.Args[2], 10, 0)
 	if err != nil {
 		fmt.Println("site_num parameter must be integer")
 		os.Exit(1)
 	}
-	siteX = int(site_num)
+	siteX = int(site_num) //site_num is int64
 	for _, arg := range strings.Split(os.Args[3], "***") {
 		if arg != "" {
 			// check if file exists
