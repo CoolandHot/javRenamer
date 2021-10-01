@@ -30,9 +30,10 @@ const (
 )
 
 // set order
+// an array with [...] system determine length
 var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
 
-// an array with [...] system determine length, not slice, therefore can't append()
+// it's not slice, therefore can't append()
 var JavSites = [...]string{
 	"https://www.javbus.com/search/",
 	"https://avmoo.casa/cn/search/",
