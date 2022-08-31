@@ -10,7 +10,7 @@
 title Add right-click menu --- JavRename it
 
 reg add "HKEY_CLASSES_ROOT\SystemFileAssociations\.mp4\shell\subtitle" /ve /d "jav¸ÄÃû" /f
-reg add "HKEY_CLASSES_ROOT\SystemFileAssociations\.mp4\shell\subtitle" /v "Icon" /d "D:/ProgramFiles/go/favicon.ico" /f
+reg add "HKEY_CLASSES_ROOT\SystemFileAssociations\.mp4\shell\subtitle" /v "Icon" /d "D:/ProgramFiles/golang/favicon.ico" /f
 reg add "HKEY_CLASSES_ROOT\SystemFileAssociations\.mp4\shell\subtitle\command" /ve /d "cmd.exe /s /k pushd D:\\Coding_Programs\\javRenamer&& go run javRename.go -site_num 0 \"%%1\""  /f
 
 pause

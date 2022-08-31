@@ -36,7 +36,7 @@ var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
 // it's not slice, therefore can't append()
 var JavSites = [...]string{
 	"https://www.javbus.com/search/",
-	"https://avmoo.casa/cn/search/",
+	"https://avmoo.click/cn/search/",
 	"http://www.javlibrary.com/cn/vl_searchbyid.php?keyword=",
 }
 var JavMatchRules = map[string][]string{
@@ -82,18 +82,23 @@ func clientScrape(link string) *goquery.Document {
 		fmt.Println(err)
 	}
 	request.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36")
-	request.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
+	// request.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
 	resp, err := client.Do(request)
 	if err != nil {
 		fmt.Println(err)
 	}
+	if resp.StatusCode == http.StatusFound { // 302
+		newURL, _ := resp.Location()
+		fmt.Println("Redirected to ", newURL.String())
+	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
+	if resp.StatusCode == http.StatusOK { // 200
 		var doc *goquery.Document
 		doc, _ = goquery.NewDocumentFromReader(resp.Body)
 		return doc
 	} else {
+		fmt.Println(request.URL.Host, resp.Status)
 		return nil
 	}
 }
@@ -155,8 +160,8 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 
 	// look for jav-id
 	matchRules := []string{
-		`(:[^A-Za-z])?[A-Za-z]{2,5}-\d{3,5}(:\D)?`, // MIDE-939
-		`(:[^A-Za-z])?[A-Za-z]{2,5}\d{3,5}(:\D)?`,  // MIDE939
+		`(:[^A-Za-z])?[A-Za-z]{1,5}-\d{3,5}(:\D)?`, // MIDE-939, C-2743
+		`(:[^A-Za-z])?[A-Za-z]{1,5}\d{3,5}(:\D)?`,  // MIDE939, C2743
 		`(:[^A-Za-z])?[A-Za-z]\d{2}-\d{3,5}(:\D)?`, // T28-556
 	}
 	for _, matchRule := range matchRules {
