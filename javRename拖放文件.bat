@@ -18,5 +18,5 @@ shift
 set /a count+=1
 if not [%1]==[] goto loop
 @REM site_num parameter means: 0:javBus; 1:avmoo; 2:javLibrary
-go run javRename.go -site_num 0 "%AllinOne%"
+go run javRename.go -site_num 0 -proxy 0 "%AllinOne%"
 pause

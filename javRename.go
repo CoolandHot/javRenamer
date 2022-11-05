@@ -67,6 +67,7 @@ var JavMatchRules = map[string][]string{
 	},
 }
 var siteX int = 0
+var with_proxy bool = true
 
 func clientScrape(link string) *goquery.Document {
 	// Create a socks5 dialer
@@ -76,7 +77,10 @@ func clientScrape(link string) *goquery.Document {
 	}
 	// Setup HTTP transport and a client
 	tr := &http.Transport{Dial: dialer.Dial}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{}
+	if with_proxy {
+		client = &http.Client{Transport: tr}
+	}
 	request, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -210,7 +214,13 @@ func main() {
 		os.Exit(1)
 	}
 	siteX = int(site_num) //site_num is int64
-	for _, arg := range strings.Split(os.Args[3], "***") {
+	withProxy, err := strconv.ParseBool(os.Args[4])
+	with_proxy = withProxy
+	if err != nil {
+		fmt.Println("with_proxy parameter error")
+		os.Exit(1)
+	}
+	for _, arg := range strings.Split(os.Args[5], "***") {
 		if arg != "" {
 			// check if file exists
 			if _, err := os.Stat(arg); err == nil {
