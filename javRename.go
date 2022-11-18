@@ -183,6 +183,13 @@ func startRename(FullPath string, ch chan string, wg *sync.WaitGroup) {
 		return
 	}
 
+	// remove illegal characters in title
+	illegal_chr, err2 := regexp.Compile(`[\\/:*?<>|]`)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+	title = illegal_chr.ReplaceAllString(title, "")
+
 	// new name according to the order
 	nameOrders := map[string]string{
 		"actress":     heroine,
