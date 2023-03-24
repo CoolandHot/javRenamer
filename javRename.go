@@ -30,8 +30,7 @@ const (
 )
 
 // set order
-// an array with [...] system determine length
-var reNameOrder = [...]string{"actress", "javID", "title", "publishDate"}
+var reNameOrder = [...]string{"actress", "publishDate", "javID", "title"}
 
 // it's not slice, therefore can't append()
 var JavSites = [...]string{
