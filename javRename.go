@@ -35,7 +35,7 @@ var reNameOrder = [...]string{"actress", "publishDate", "javID", "title"}
 // it's not slice, therefore can't append()
 var JavSites = [...]string{
 	"https://www.javbus.com/search/",
-	"https://avmoo.click/cn/search/",
+	"https://avmoo.online/cn/search/",
 	"http://www.javlibrary.com/cn/vl_searchbyid.php?keyword=",
 }
 var JavMatchRules = map[string][]string{
